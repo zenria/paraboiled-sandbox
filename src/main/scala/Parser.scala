@@ -2,9 +2,9 @@ import org.parboiled.errors.{ErrorUtils, ParsingException}
 import org.parboiled.scala._
 
 sealed abstract class Expr
-case class Text(inner: String)          extends Expr
-case class And(left: Expr, right: Expr) extends Expr
-case class Or(left: Expr, right: Expr)  extends Expr
+case class Text(inner: String)     extends Expr
+case class And(clauses: Seq[Expr]) extends Expr
+case class Or(clauses: Seq[Expr])  extends Expr
 
 /**
   * Let's try to parse expression having the form:
@@ -21,9 +21,23 @@ class ExprParser extends Parser {
     WhiteSpaces0 ~ Expression ~ EOI
   }
 
-  def Expression: Rule1[Expr] = AndClause ~ zeroOrMore("OR" ~ WhiteSpaces1 ~ AndClause ~~> ((a, b) => Or(a, b)))
+  def Expression: Rule1[Expr] =
+    AndClause ~ zeroOrMore("OR" ~ WhiteSpaces1 ~ AndClause) ~~> ((clause: Expr,
+                                                                  subsequentOrClauses: List[Expr]) =>
+                                                                   if (subsequentOrClauses.isEmpty) {
+                                                                     clause
+                                                                   } else {
+                                                                     Or(Seq(clause).concat(subsequentOrClauses))
+                                                                   })
 
-  def AndClause: Rule1[Expr] = Term ~ zeroOrMore("AND" ~ WhiteSpaces1 ~ Term ~~> ((a, b) => And(a, b)))
+  def AndClause: Rule1[Expr] =
+    Term ~ zeroOrMore("AND" ~ WhiteSpaces1 ~ Term) ~~> ((clause: Expr,
+                                                         subsequentAndClauses: List[Expr]) =>
+                                                          if (subsequentAndClauses.isEmpty) {
+                                                            clause
+                                                          } else {
+                                                            And(Seq(clause).concat(subsequentAndClauses))
+                                                          })
 
   def Term: Rule1[Expr] = rule {
     Word | Parens | Expression

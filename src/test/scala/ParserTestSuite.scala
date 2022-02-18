@@ -18,21 +18,21 @@ class ParserTestSuite extends AnyFunSuite {
   }
 
   test("or") {
-    assert(parse("foo OR bar") == Or(foo, bar))
-    assert(parse("foo OR bar OR baz") == Or(Or(foo, bar), baz))
-    assert(parse("(foo OR bar)") == Or(foo, bar))
-    assert(parse("foo OR (bar OR baz)") == Or(foo, Or(bar, baz)))
-    assert(parse("(foo OR bar) OR baz") == Or(Or(foo, bar), baz))
+    assert(parse("foo OR bar") == Or(Seq(foo, bar)))
+    assert(parse("foo OR bar OR baz") == Or(Seq(foo, bar, baz)))
+    assert(parse("(foo OR bar)") == Or(Seq(foo, bar)))
+    assert(parse("foo OR (bar OR baz)") == Or(Seq(foo, Or(Seq(bar, baz)))))
+    assert(parse("(foo OR bar) OR baz") == Or(Seq(Or(Seq(foo, bar)), baz)))
   }
 
   test("and") {
-    assert(parse("foo AND bar") == And(foo, bar))
-    assert(parse("foo AND bar AND baz") == And(And(foo, bar), baz))
+    assert(parse("foo AND bar") == And(Seq(foo, bar)))
+    assert(parse("foo AND bar AND baz") == And(Seq(foo, bar, baz)))
 
-    assert(parse("foo OR bar AND baz") == Or(foo, And(bar, baz)))
-    assert(parse("foo AND bar OR baz") == Or(And(foo, bar), baz))
-    assert(parse("(foo OR bar) AND baz") == And(Or(foo, bar), baz))
-    assert(parse("foo AND (bar OR baz)") == And(foo, Or(bar, baz)))
+    assert(parse("foo OR bar AND baz") == Or(Seq(foo, And(Seq(bar, baz)))))
+    assert(parse("foo AND bar OR baz") == Or(Seq(And(Seq(foo, bar)), baz)))
+    assert(parse("(foo OR bar) AND baz") == And(Seq(Or(Seq(foo, bar)), baz)))
+    assert(parse("foo AND (bar OR baz)") == And(Seq(foo, Or(Seq(bar, baz)))))
   }
 }
 
